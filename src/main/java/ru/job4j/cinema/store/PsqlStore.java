@@ -11,15 +11,12 @@ import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 
 public class PsqlStore implements Store {
 
     private final BasicDataSource pool = new BasicDataSource();
-    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlStore.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(PsqlStore.class.getName());
 
     private PsqlStore() {
         Properties cfg = new Properties();
@@ -27,17 +24,17 @@ public class PsqlStore implements Store {
         )) {
             cfg.load(io);
         } catch (Exception e) {
-            LOGGER.error("Exception occurred: " + e.getMessage(), e);
+            LOG.error("Exception occurred: " + e.getMessage(), e);
         }
         try {
             Class.forName(cfg.getProperty("jdbc.driver"));
         } catch (Exception e) {
-            LOGGER.error("Exception occurred: " + e.getMessage(), e);
+            LOG.error("Exception occurred: " + e.getMessage(), e);
         }
         pool.setDriverClassName(cfg.getProperty("jdbc.driver"));
-        pool.setUrl("jdbc.url");
-        pool.setUsername("jdbc.username");
-        pool.setPassword("jdbc.password");
+        pool.setUrl(cfg.getProperty("jdbc.url"));
+        pool.setUsername(cfg.getProperty("jdbc.username"));
+        pool.setPassword(cfg.getProperty("jdbc.password"));
         pool.setMinIdle(5);
         pool.setMaxIdle(10);
         pool.setMaxOpenPreparedStatements(100);
@@ -69,7 +66,7 @@ public class PsqlStore implements Store {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Exception occurred: " + e.getMessage(), e);
+            LOG.error("Exception occurred: " + e.getMessage(), e);
         }
         return rsl;
     }
@@ -93,7 +90,7 @@ public class PsqlStore implements Store {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Exception occurred: " + e.getMessage(), e);
+            LOG.error("Exception occurred: " + e.getMessage(), e);
         }
         return rsl;
     }
@@ -197,7 +194,7 @@ public class PsqlStore implements Store {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Exception occurred: " + e.getMessage(), e);
+            LOG.error("Exception occurred: " + e.getMessage(), e);
         }
         return accounts;
     }
@@ -218,7 +215,7 @@ public class PsqlStore implements Store {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Exception occurred: " + e.getMessage(), e);
+            LOG.error("Exception occurred: " + e.getMessage(), e);
         }
         return tickets;
     }
@@ -238,7 +235,7 @@ public class PsqlStore implements Store {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Exception occurred: " + e.getMessage(), e);
+            LOG.error("Exception occurred: " + e.getMessage(), e);
         }
         return account;
     }
@@ -258,7 +255,7 @@ public class PsqlStore implements Store {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Exception occurred: " + e.getMessage(), e);
+            LOG.error("Exception occurred: " + e.getMessage(), e);
         }
         return account;
     }

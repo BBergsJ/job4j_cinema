@@ -3,6 +3,8 @@ package ru.job4j.cinema.servlet;
 import org.json.JSONObject;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.job4j.cinema.model.Account;
 import ru.job4j.cinema.model.Ticket;
 import ru.job4j.cinema.store.PsqlStore;
@@ -23,12 +25,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class HallServlet extends HttpServlet {
 
     private static final Gson GSON = new GsonBuilder().create();
+    private static final Logger LOG = LoggerFactory.getLogger(HallServlet.class.getName());
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json; charset=utf-8");
+        List<Ticket> tickets = (List<Ticket>) PsqlStore.instOf().findAllTickets();
         OutputStream output = resp.getOutputStream();
-        String json = GSON.toJson(PsqlStore.instOf().findAllTickets());
+        String json = GSON.toJson(tickets);
         output.write(json.getBytes(StandardCharsets.UTF_8));
         output.flush();
         output.close();
@@ -38,40 +42,40 @@ public class HallServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
-        JSONObject jsonReq = new JSONObject(req.getParameterNames().asIterator().next());
+        try {
+            JSONObject jsonReq = new JSONObject(req.getParameterNames().asIterator().next());
 
-        String username = jsonReq.getString("usernames");
-        String email = jsonReq.getString("email");
-        String phone = jsonReq.getString("phone");
-        String sessionId = jsonReq.getString("sessionId");
-        String row = jsonReq.getString("row");
-        String cell = jsonReq.getString("cell");
+            String username = jsonReq.getString("username");
+            String email = jsonReq.getString("email");
+            String phone = jsonReq.getString("phone");
+            String sessionId = jsonReq.getString("sessionId");
+            String row = jsonReq.getString("row");
+            String cell = jsonReq.getString("cell");
 
-        Store store = PsqlStore.instOf();
-        Optional<Account> account = store.findAccountByEmail(email);
-        if (account.isEmpty()) {
-            store.save(new Account(username, email, phone));
+            Store store = PsqlStore.instOf();
+            Optional<Account> account = store.findAccountByEmail(email);
+            if (account.isEmpty()) {
+                account = store.save(new Account(username, email, phone));
+            }
+
+            String msg = "Место успешно оплачено!";
+
+            Optional<Ticket> ticket = store.save(new Ticket(
+                    Integer.parseInt(sessionId),
+                    Integer.parseInt(row),
+                    Integer.parseInt(cell),
+                    account.get()));
+            if (ticket.isEmpty()) {
+                msg = "К сожалению, место не может быть куплено.";
+            }
+
+            JSONObject jsonResp = new JSONObject();
+            jsonResp.put("message", msg);
+            PrintWriter writer = resp.getWriter();
+            writer.print(jsonResp);
+            writer.flush();
+        } catch (Exception e) {
+            LOG.error("Exception occurred: ", e);
         }
-
-        String msg = "Место успешно оплачено!";
-
-        Optional<Ticket> ticket = store.save(new Ticket(
-                Integer.parseInt(sessionId),
-                Integer.parseInt(row),
-                Integer.parseInt(cell),
-                account.get()));
-        if (ticket.isEmpty()) {
-            msg = "К сожалению, место не может быть куплено.";
-        }
-
-        JSONObject jsonResp = new JSONObject();
-        jsonResp.put("message", msg);
-        PrintWriter writer = resp.getWriter();
-        writer.print(jsonResp);
-        writer.flush();
-//        OutputStream output = resp.getOutputStream();
-//        output.write(GSON.toJson(ticket.get()).getBytes(StandardCharsets.UTF_8));
-//        output.flush();
-//        output.close();
     }
 }
