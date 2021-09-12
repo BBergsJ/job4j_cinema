@@ -58,19 +58,19 @@ public class HallServlet extends HttpServlet {
                 account = store.save(new Account(username, email, phone));
             }
 
-            String msg = "Место успешно оплачено!";
-
-            Optional<Ticket> ticket = store.save(new Ticket(
-                    Integer.parseInt(sessionId),
-                    Integer.parseInt(row),
-                    Integer.parseInt(cell),
-                    account.get()));
-            if (ticket.isEmpty()) {
-                msg = "К сожалению, место не может быть куплено.";
+            try {
+                Optional<Ticket> ticket = store.save(new Ticket(
+                        Integer.parseInt(sessionId),
+                        Integer.parseInt(row),
+                        Integer.parseInt(cell),
+                        account.get()));
+            } catch (IllegalArgumentException iae) {
+                resp.sendError(409);
+                return;
             }
 
             JSONObject jsonResp = new JSONObject();
-            jsonResp.put("message", msg);
+            jsonResp.put("message", "Место успешно оплачено!");
             PrintWriter writer = resp.getWriter();
             writer.print(jsonResp);
             writer.flush();

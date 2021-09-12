@@ -72,7 +72,7 @@ public class PsqlStore implements Store {
     }
 
     @Override
-    public Optional<Ticket> save(Ticket ticket) {
+    public Optional<Ticket> save(Ticket ticket) throws IllegalArgumentException {
         Optional<Ticket> rsl = Optional.empty();
         try (Connection cn = pool.getConnection();
              PreparedStatement ps = cn.prepareStatement("INSERT INTO ticket(session_id, row, cell, account_id)"
@@ -92,93 +92,11 @@ public class PsqlStore implements Store {
         } catch (Exception e) {
             LOG.error("Exception occurred: " + e.getMessage(), e);
         }
+        if (rsl.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
         return rsl;
     }
-
-//    @Override
-//    public void saveAccount(Account account) {
-//        if (account.getId() == 0) {
-//            create(account);
-//        } else {
-//            update(account);
-//        }
-//    }
-//
-//    public void saveTicket(Ticket ticket) {
-//        if (ticket.getId() == 0) {
-//            create(ticket);
-//        } else {
-//            update(ticket);
-//        }
-//    }
-//
-//    private Account create(Account account) {
-//        try (Connection cn = pool.getConnection();
-//             PreparedStatement ps =  cn.prepareStatement("INSERT INTO account(username, email, phone) VALUES (?, ?, ?)",
-//                     PreparedStatement.RETURN_GENERATED_KEYS)
-//        ) {
-//            ps.setString(1, account.getUsername());
-//            ps.setString(2, account.getEmail());
-//            ps.setString(3, account.getPhone());
-//            ps.executeUpdate();
-//            try (ResultSet id = ps.getGeneratedKeys()) {
-//                if (id.next()) {
-//                    account.setId(id.getInt(1));
-//                }
-//            }
-//        } catch (Exception e) {
-//            LOGGER.error("Exception occurred: " + e.getMessage(), e);
-//        }
-//        return account;
-//    }
-//
-//    private Ticket create(Ticket ticket) {
-//        try (Connection cn = pool.getConnection();
-//             PreparedStatement ps =  cn.prepareStatement("INSERT INTO ticket(session_id, row, cell, account_id) VALUES (?, ?, ?, ?)",
-//                     PreparedStatement.RETURN_GENERATED_KEYS)
-//        ) {
-//            ps.setInt(1, ticket.getSessionId());
-//            ps.setInt(2, ticket.getRow());
-//            ps.setInt(3, ticket.getCell());
-//            ps.setInt(4, ticket.getAccount().getId());
-//            ps.execute();
-//            try (ResultSet id = ps.getGeneratedKeys()) {
-//                if (id.next()) {
-//                    ticket.setId(id.getInt(1));
-//                }
-//            }
-//        } catch (Exception e) {
-//            LOGGER.error("Exception occurred: " + e.getMessage(), e);
-//        }
-//        return ticket;
-//    }
-//
-//    private void update(Account account) {
-//        try (Connection cn = pool.getConnection();
-//             PreparedStatement ps = cn.prepareStatement("UPDATE account SET username = ?, email = ?, phone = ? WHERE id = ?")) {
-//            ps.setString(1, account.getUsername());
-//            ps.setString(2, account.getEmail());
-//            ps.setString(3, account.getPhone());
-//            ps.setInt(4, account.getId());
-//            ps.executeUpdate();
-//        } catch (Exception e) {
-//            LOGGER.error("Exception occurred: " + e.getMessage(), e);
-//        }
-//    }
-//
-//    private void update(Ticket ticket) {
-//        try (Connection cn = pool.getConnection();
-//             PreparedStatement ps = cn.prepareStatement("UPDATE ticket SET session_id = ?, row = ?, cell = ?, account_id = ? WHERE id = ?")) {
-//            ps.setInt(1, ticket.getSessionId());
-//            ps.setInt(2, ticket.getRow());
-//            ps.setInt(3, ticket.getCell());
-//            ps.setInt(4, ticket.getAccount().getId());
-//            ps.setInt(5, ticket.getId());
-//            ps.executeUpdate();
-//        } catch (Exception e) {
-//            LOGGER.error("Exception occurred: " + e.getMessage(), e);
-//        }
-//    }
 
     @Override
     public Collection<Account> findAllAccounts() {
